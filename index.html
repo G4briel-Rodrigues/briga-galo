@@ -1,367 +1,123 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>UFC - Galo Battle Royale</title>
+    <title>UFC GALO 7.2</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto:wght@500;900&display=swap');
+        body { background: #1a1a1a; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        #game-container { position: relative; border: 8px solid #5d4037; background: #3e2723; }
+        #login-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         
-        body { 
-            background: #1a1a1a; 
-            color: white; 
-            font-family: 'Roboto', sans-serif; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            height: 100vh; 
-            margin: 0; 
-            overflow: hidden; 
-            user-select: none; 
-        }
-
-        #login-screen { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 999; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-        }
-        #login-screen h1 { 
-            font-family: 'Black Ops One', cursive; font-size: 60px; color: #d32f2f; margin-bottom: 20px; 
-        }
-
-        #game-container { 
-            position: relative; 
-            border: 10px solid #5d4037; 
-            background-color: #3e2723; 
-            overflow: hidden; 
-            cursor: crosshair; 
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-        }
-
-        /* Cerca Elétrica (Visual) */
-        #game-container::after {
-            content: ''; position: absolute; inset: 0;
-            border: 4px dashed rgba(255, 235, 59, 0.3);
-            pointer-events: none;
-            box-shadow: inset 0 0 20px rgba(255, 0, 0, 0.2);
-            z-index: 5;
-        }
-
-        .shake { animation: shake 0.3s; }
-        .flash-electric { animation: flashElectric 0.2s; }
-
-        #announcement {
-            position: absolute; top: 15%; left: 50%; transform: translate(-50%, -50%) scale(0);
-            font-family: 'Black Ops One', cursive; font-size: 40px; color: #ffeb3b;
-            text-shadow: 3px 3px 0 #000; z-index: 100; pointer-events: none; opacity: 0; 
-            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); width: 100%; text-align: center;
-        }
-        #announcement.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-
-        #winner-screen {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.8);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 200; pointer-events: none; opacity: 0; transition: opacity 0.5s;
-        }
-        #winner-screen.visible { opacity: 1; pointer-events: auto; }
-        
-        /* RANKING: Canto direito, menor e transparente */
-        #leaderboard {
-            position: absolute; top: 10px; right: 10px;
-            background: rgba(0, 0, 0, 0.4); 
-            padding: 8px;
-            border-radius: 8px; 
-            width: 150px; z-index: 50;
-            pointer-events: none;
-            border: 1px solid rgba(255,255,255,0.1);
-            transform: scale(0.85);
-            transform-origin: top right;
-        }
-
-        /* GALO */
-        .rooster { 
-            width: 60px; height: 60px; 
-            position: absolute; 
-            pointer-events: none; 
-            transition: top 0.1s linear, left 0.1s linear;
-            z-index: 10;
-        } 
-        
-        .rooster-inner { 
-            width: 100%; height: 100%; 
-            position: relative; 
-            transform-origin: center; 
-            transition: transform 0.1s; 
-        }
-
-        .body { 
-            width: 40px; height: 50px; 
-            border-radius: 50% 50% 40% 40%; 
-            position: absolute; top: 10px; left: 10px; 
-            box-shadow: inset -3px -3px 8px rgba(0,0,0,0.3); 
-            border: 2px solid rgba(0,0,0,0.2);
-        }
-        
-        .color-branco .body { background: #f0f0f0; } 
-        .color-preto .body { background: #222; border-color: #555; } 
-        .color-vermelho .body { background: #d32f2f; }
-
-        .eye { position: absolute; top: 18px; right: 15px; width: 5px; height: 5px; background: #000; border-radius: 50%; border: 1px solid white; z-index: 2; }
-        .beak { position: absolute; top: 22px; right: 2px; width: 12px; height: 8px; background: orange; border-radius: 0 50% 50% 0; z-index: 1; }
-        .comb { position: absolute; top: 2px; right: 18px; width: 15px; height: 12px; background: red; border-radius: 50% 50% 0 0; z-index: 1; }
-        .wing { position: absolute; top: 25px; left: 5px; width: 20px; height: 20px; background: rgba(0,0,0,0.1); border-radius: 50%; z-index: 2; }
-
-        .attacking .rooster-inner { animation: peck 0.15s ease-in-out; }
-
-        .held-hammer { position: absolute; display: none; z-index: 20; top: -15px; right: -20px; font-size: 35px; transform: scaleX(-1) rotate(-15deg); filter: drop-shadow(2px 2px 0 black); }
+        /* O GALO */
+        .rooster { position: absolute; width: 60px; height: 60px; transition: 0.05s linear; }
+        .rooster-inner { width: 100%; height: 100%; position: relative; }
+        .body { width: 40px; height: 45px; background: #eee; border-radius: 50%; position: absolute; bottom: 5px; left: 10px; }
+        .color-preto .body { background: #222; }
+        .color-vermelho .body { background: #b71c1c; }
+        .beak { position: absolute; top: 20px; right: 2px; width: 12px; height: 8px; background: orange; border-radius: 0 50% 50% 0; }
+        .comb { position: absolute; top: 5px; right: 15px; width: 15px; height: 12px; background: red; border-radius: 50% 50% 0 0; }
+        .held-hammer { position: absolute; top: -10px; right: -15px; font-size: 30px; display: none; }
         .has-hammer .held-hammer { display: block; }
-        
-        .chat-bubble {
-            position: absolute; top: -50px; left: 50%; transform: translateX(-50%);
-            background: white; color: black; padding: 4px 8px; border-radius: 8px;
-            font-size: 12px; font-weight: bold; border: 2px solid black; z-index: 100; white-space: nowrap;
+
+        /* ANIMAÇÃO DE ATAQUE DIRECIONAL */
+        .attacking .rooster-inner { animation: peckAnim 0.05s ease-in-out; }
+        @keyframes peckAnim {
+            0% { transform: scaleX(1); }
+            50% { transform: scaleX(1.3) translateX(10px); }
+            100% { transform: scaleX(1); }
         }
 
-        .crit-text {
-            position: absolute; top: -40px; left: 50%; transform: translateX(-50%);
-            color: #ff0; font-family: 'Black Ops One'; font-size: 18px;
-            text-shadow: 2px 2px red; animation: floatUp 1s forwards; z-index: 101;
-        }
-
-        /* Partículas */
-        .feather { position: absolute; width: 6px; height: 10px; background: #eee; border-radius: 50% 50% 0 50%; pointer-events: none; animation: fly 0.8s forwards; z-index: 90; }
-        .blood { position: absolute; width: 4px; height: 4px; background: #b71c1c; border-radius: 50%; pointer-events: none; animation: fly 0.5s forwards; z-index: 89; }
-
-        .hud { position: absolute; top: -30px; width: 80px; left: -10px; text-align: center; }
-        .hp-bg { width: 100%; height: 6px; background: #000; border: 1px solid #555; border-radius: 4px; overflow: hidden; }
-        .hp-fill { height: 100%; background: #00e676; transition: width 0.1s; }
-        
-        .dead { opacity: 0.5; filter: grayscale(1); transform: rotate(90deg); transition: 0.5s; }
-        
-        .item-drop { position: absolute; animation: bounce 1s infinite alternate; font-size: 35px; filter: drop-shadow(0 0 5px white); z-index: 5; }
-        
-        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-8px); } }
-        @keyframes peck { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(30deg) translateX(10px); } }
-        @keyframes fly { 100% { opacity: 0; transform: translate(var(--tx), var(--ty)) rotate(180deg); } }
-        @keyframes shake { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(3px, 3px); } 50% { transform: translate(-3px, -3px); } }
-        @keyframes floatUp { 0% { opacity: 1; transform: translate(-50%, 0) scale(1); } 100% { opacity: 0; transform: translate(-50%, -40px) scale(1.5); } }
-        @keyframes flashElectric { 0%, 100% { background: #3e2723; } 50% { background: #555; } }
+        .hp-bar { position: absolute; top: -15px; width: 60px; height: 6px; background: #000; border: 1px solid #fff; }
+        .hp-fill { height: 100%; background: #00ff00; width: 100%; transition: 0.1s; }
+        .item-drop { position: absolute; font-size: 30px; }
+        #leaderboard { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; }
     </style>
 </head>
 <body>
     <div id="login-screen">
-        <h1>UFC GALO 7.1</h1>
-        <div style="display:flex; flex-direction:column; gap:10px; width:250px">
-            <input type="text" id="nick" placeholder="Apelido (Max 15)" maxlength="15" style="padding:10px; text-align:center; font-weight:bold; border-radius:5px; border:none;">
-            <select id="color" style="padding:10px; border-radius:5px; border:none;">
-                <option value="branco">Galo Branco</option>
-                <option value="preto">Galo Preto</option>
-                <option value="vermelho">Galo Vingador</option>
-            </select>
-            <button onclick="enter()" style="padding:10px; background:#d32f2f; color:white; border:none; cursor:pointer; font-weight:bold; border-radius:5px; font-size:16px;">ENTRAR NA RINHA</button>
-        </div>
+        <h1>UFC GALO 7.2</h1>
+        <input type="text" id="nick" placeholder="Seu apelido">
+        <select id="color">
+            <option value="branco">Branco</option>
+            <option value="preto">Preto</option>
+            <option value="vermelho">Vermelho</option>
+        </select>
+        <button onclick="enter()">ENTRAR</button>
     </div>
 
     <div id="game-container">
-        <div id="leaderboard">
-            <h3 style="margin:0; color:#ffeb3b; text-align:center; font-size:12px; border-bottom:1px solid #555; padding-bottom:3px; text-transform: uppercase;">Top Galos</h3>
-            <div id="lb-list" style="margin-top:5px; font-size:11px;"></div>
-        </div>
-        
-        <div id="announcement"></div>
-        
-        <div id="winner-screen">
-            <div style="font-family: 'Black Ops One'; font-size: 40px; color: white;">CAMPEÃO</div>
-            <div id="winner-name" style="font-family: 'Black Ops One'; font-size: 60px; color: gold; text-shadow: 4px 4px 0px black;">...</div>
-        </div>
-        
-        <div style="position:absolute; bottom:5px; left:10px; color:rgba(255,255,255,0.3); font-size:10px; pointer-events:none;">
-            WASD: Mover | CLIQUE: Bicar/Marretar | ESPAÇO: Dash | 1-4: Provocar
-        </div>
+        <div id="leaderboard">TOP 5: <div id="lb-list"></div></div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
         const arena = document.getElementById('game-container');
-        const notify = document.getElementById('announcement');
-        const winnerScreen = document.getElementById('winner-screen');
-        const winnerNameEl = document.getElementById('winner-name');
-        const lbList = document.getElementById('lb-list');
         let myId = null;
 
         function enter() {
-            const name = document.getElementById('nick').value.trim() || "Galo";
-            const color = document.getElementById('color').value;
-            socket.emit('join_game', { name, color });
-        }
-
-        socket.on('login_success', (c) => {
-            myId = c.id;
-            arena.style.width = c.width + 'px'; arena.style.height = c.height + 'px';
+            socket.emit('join_game', { name: document.getElementById('nick').value, color: document.getElementById('color').value });
             document.getElementById('login-screen').style.display = 'none';
-            setupControls();
-        });
-
-        socket.on('msg', (txt) => {
-            notify.innerText = txt; notify.classList.add('show');
-            setTimeout(() => notify.classList.remove('show'), 3000);
-        });
-
-        socket.on('update_leaderboard', (list) => {
-            lbList.innerHTML = '';
-            list.forEach((p, i) => {
-                const item = document.createElement('div');
-                item.style.marginBottom = '3px';
-                item.style.display = 'flex';
-                item.style.justifyContent = 'space-between';
-                item.style.color = i === 0 ? '#ffd700' : '#ddd';
-                item.innerHTML = `<span>${i+1}. ${p.name.substring(0,10)}</span> <span>${p.wins} W</span>`;
-                lbList.appendChild(item);
-            });
-        });
-
-        socket.on('show_winner', (name) => {
-            winnerNameEl.innerText = name; winnerScreen.classList.add('visible');
-        });
-
-        socket.on('hide_winner', () => winnerScreen.classList.remove('visible'));
-
-        function spawnItem(id, emoji, x, y) {
-            let el = document.getElementById(id) || document.createElement('div');
-            el.id = id; el.className = 'item-drop'; el.innerText = emoji;
-            el.style.left = x + 'px'; el.style.top = y + 'px';
-            arena.appendChild(el);
         }
 
-        socket.on('hammer_spawn', (p) => spawnItem(p.id, '🔨', p.x, p.y));
-        socket.on('corn_spawn', (p) => spawnItem(p.id, '🌽', p.x, p.y));
-
-        socket.on('item_update', (data) => {
-            if(data.status === 'picked') {
-                const el = document.getElementById(data.id);
-                if(el) el.remove();
-            }
-        });
-
-        socket.on('clear_items', () => {
-            document.querySelectorAll('.item-drop').forEach(e => e.remove());
-        });
-        
-        socket.on('action_anim', (data) => {
-            const el = document.getElementById(`p-${data.id}`);
-            if(el) { 
-                el.classList.remove('attacking'); 
-                void el.offsetWidth; 
-                el.classList.add('attacking'); 
-            }
-        });
-
-        socket.on('player_hit', (data) => {
-            const el = document.getElementById(`p-${data.id}`);
-            if(el) {
-                if(data.id === myId) {
-                    if(data.electric) {
-                        arena.classList.add('flash-electric');
-                        setTimeout(()=> arena.classList.remove('flash-electric'), 200);
-                    } else {
-                        arena.classList.add('shake'); 
-                        setTimeout(()=> arena.classList.remove('shake'), 300);
-                    }
-                }
-                
-                if(data.crit) {
-                    const c = document.createElement('div'); c.className = 'crit-text'; c.innerText = "CRÍTICO!";
-                    el.appendChild(c); setTimeout(() => c.remove(), 1000);
-                }
-
-                // Efeito visual: Sangue ou Penas
-                const particleCount = data.electric ? 4 : 3;
-                for(let i=0; i<particleCount; i++) {
-                    const type = (data.electric || Math.random() > 0.5) ? 'feather' : 'blood';
-                    const f = document.createElement('div'); 
-                    f.className = type;
-                    f.style.left = (30)+'px'; f.style.top = (30)+'px'; // Centro relativo ao galo
-                    f.style.setProperty('--tx', (Math.random()-0.5)*100+'px');
-                    f.style.setProperty('--ty', (Math.random()-0.5)*100+'px');
-                    if(data.electric && type === 'feather') f.style.background = "#ffeb3b";
-                    el.appendChild(f); 
-                    setTimeout(()=>f.remove(), 800);
-                }
-            }
-        });
-
-        socket.on('msg_bubble', (data) => {
-            const el = document.getElementById(`p-${data.id}`);
-            if(el) {
-                const b = document.createElement('div'); b.className = 'chat-bubble';
-                b.innerText = data.text; el.appendChild(b); setTimeout(() => b.remove(), 2000);
-            }
+        socket.on('login_success', (data) => {
+            myId = data.id;
+            arena.style.width = data.width + 'px';
+            arena.style.height = data.height + 'px';
+            startKeys();
         });
 
         socket.on('update_state', (players) => {
-            // Remove quem saiu
-            const currentIds = Object.keys(players).map(id => `p-${id}`);
-            document.querySelectorAll('.rooster').forEach(el => {
-                if (!currentIds.includes(el.id)) el.remove();
-            });
-
             Object.values(players).forEach(p => {
-                let el = document.getElementById(`p-${p.id}`);
-                if(!el) {
-                    el = document.createElement('div'); 
-                    el.id = `p-${p.id}`; 
+                let el = document.getElementById(p.id);
+                if (!el) {
+                    el = document.createElement('div');
+                    el.id = p.id;
                     el.className = `rooster color-${p.color}`;
-                    el.innerHTML = `
-                        <div class="hud">
-                            <div style="font-size:10px;font-weight:bold;text-shadow:1px 1px 0 #000;">${p.name}</div>
-                            <div class="hp-bg"><div class="hp-fill"></div></div>
-                        </div>
-                        <div class="rooster-inner">
-                            <div class="body"></div>
-                            <div class="comb"></div>
-                            <div class="eye"></div>
-                            <div class="beak"></div>
-                            <div class="wing"></div>
-                            <div class="held-hammer">🔨</div>
-                        </div>`;
+                    el.innerHTML = `<div class="hp-bar"><div class="hp-fill"></div></div><div class="rooster-inner"><div class="comb"></div><div class="body"></div><div class="beak"></div><div class="held-hammer">🔨</div></div>`;
                     arena.appendChild(el);
                 }
-                
-                // Atualização suave
-                el.style.left = p.x + 'px'; 
+                el.style.left = p.x + 'px';
                 el.style.top = p.y + 'px';
-                
-                const fill = el.querySelector('.hp-fill');
-                fill.style.width = Math.max(0, p.hp) + '%';
-                fill.style.background = p.hp < 30 ? '#ff1744' : '#00e676';
-                
-                el.querySelector('.rooster-inner').style.transform = `scaleX(${p.direction})`;
-                
+                el.querySelector('.hp-fill').style.width = p.hp + '%';
+                // Vira o galo para o lado certo
+                el.style.transform = `scaleX(${p.direction})`;
                 p.hasHammer ? el.classList.add('has-hammer') : el.classList.remove('has-hammer');
-                p.hp <= 0 ? el.classList.add('dead') : el.classList.remove('dead');
+                if (p.dead) el.style.opacity = '0.3';
             });
         });
 
-        function setupControls() {
+        socket.on('action_anim', (data) => {
+            const el = document.getElementById(data.id);
+            if (el) {
+                el.classList.remove('attacking');
+                void el.offsetWidth;
+                el.classList.add('attacking');
+            }
+        });
+
+        socket.on('hammer_spawn', (d) => spawnItem(d, '🔨'));
+        socket.on('corn_spawn', (d) => spawnItem(d, '🌽'));
+        socket.on('item_update', (d) => { if(d.status === 'picked') document.getElementById(d.id)?.remove(); });
+
+        function spawnItem(d, icon) {
+            const el = document.createElement('div');
+            el.id = d.id; el.className = 'item-drop';
+            el.innerText = icon; el.style.left = d.x + 'px'; el.style.top = d.y + 'px';
+            arena.appendChild(el);
+        }
+
+        function startKeys() {
             const keys = {};
-            document.onkeydown = (e) => {
-                keys[e.key.toLowerCase()] = true;
-                if(e.key === ' ') socket.emit('dash');
-                if(['1','2','3','4'].includes(e.key)) socket.emit('taunt', parseInt(e.key)-1);
-            };
-            document.onkeyup = (e) => keys[e.key.toLowerCase()] = false;
-            
-            // Loop de envio de movimento (30ms)
+            window.onkeydown = (e) => keys[e.key.toLowerCase()] = true;
+            window.onkeyup = (e) => keys[e.key.toLowerCase()] = false;
+            window.onmousedown = () => socket.emit('click_action');
             setInterval(() => {
-                if(keys['w']) socket.emit('move', 'w'); 
+                if(keys['w']) socket.emit('move', 'w');
                 if(keys['s']) socket.emit('move', 's');
-                if(keys['a']) socket.emit('move', 'a'); 
+                if(keys['a']) socket.emit('move', 'a');
                 if(keys['d']) socket.emit('move', 'd');
             }, 30);
-            
-            window.onmousedown = (e) => {
-                if(!e.target.closest('#login-screen')) socket.emit('click_action');
-            };
         }
     </script>
 </body>
