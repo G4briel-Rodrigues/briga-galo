@@ -229,6 +229,9 @@ setInterval(() => {
 }, 1000 / 60);
 
 const PORT = process.env.PORT || 8080;
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 server.listen(PORT, () => {
     console.log(`UFC GALO 3.3 - AJUSTE DE DANO - PORTA: ${PORT}`);
 });
