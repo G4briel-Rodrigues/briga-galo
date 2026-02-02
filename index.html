@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>UFC - Galo Edition 2.0</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto:wght@500&display=swap');
+        body { background: #1a1a1a; color: white; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; user-select: none; }
+        #login-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #login-screen h1 { font-family: 'Black Ops One', cursive; font-size: 60px; color: #d32f2f; margin-bottom: 20px; }
+        #game-container { position: relative; border: 10px solid #5d4037; background-color: #3e2723; overflow: hidden; cursor: crosshair; }
+        .shake { animation: shake 0.3s; }
+
+        #announcement {
+            position: absolute; top: 15%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            font-family: 'Black Ops One', cursive; font-size: 40px; color: #ffeb3b;
+            text-shadow: 3px 3px 0 #000; z-index: 100; pointer-events: none; opacity: 0; 
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); width: 100%; text-align: center;
+        }
+        #announcement.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+
+        #winner-screen {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.8);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 200; pointer-events: none; opacity: 0; transition: opacity 0.5s;
+        }
+        #winner-screen.visible { opacity: 1; pointer-events: auto; }
+        .winner-text {
+            font-family: 'Black Ops One', cursive; font-size: 70px; color: gold; 
+            text-shadow: 0 0 20px #ff6f00, 4px 4px 0px black; animation: pulse 1s infinite;
+        }
+
+        #leaderboard {
+            position: absolute; top: 20px; right: 20px;
+            background: rgba(0, 0, 0, 0.7); padding: 15px;
+            border-radius: 10px; border: 2px solid #5d4037; width: 200px; z-index: 50;
+        }
+        .lb-item.top1 { color: gold; font-weight: bold; }
+
+        .rooster { width: 80px; height: 80px; position: absolute; pointer-events: none; } 
+        .rooster-inner { width: 100%; height: 100%; position: relative; transform-origin: center; transition: transform 0.1s; }
+
+        .body { width: 50px; height: 60px; border-radius: 50% 50% 40% 40%; position: absolute; top: 15px; left: 15px; box-shadow: inset -5px -5px 10px rgba(0,0,0,0.3); }
+        .color-branco .body { background: #fff; } 
+        .color-preto .body { background: #222; } 
+        .color-vermelho .body { background: #d32f2f; }
+        .eye { position: absolute; top: 25px; right: 20px; width: 6px; height: 6px; background: #000; border-radius: 50%; border: 1px solid gold; }
+        .beak { position: absolute; top: 30px; right: 8px; width: 15px; height: 10px; background: orange; border-radius: 0 50% 50% 0; }
+        .comb { position: absolute; top: 5px; right: 25px; width: 20px; height: 15px; background: red; border-radius: 50% 50% 0 0; }
+        
+        .attacking .rooster-inner { animation: peck 0.15s ease-in-out; }
+        .held-hammer { position: absolute; top: -10px; right: -25px; font-size: 45px; display: none; z-index: 20; transform: scaleX(-1) rotate(-15deg); }
+        .has-hammer .held-hammer { display: block; }
+        
+        .chat-bubble {
+            position: absolute; top: -55px; left: 50%; transform: translateX(-50%);
+            background: white; color: black; padding: 4px 8px; border-radius: 8px;
+            font-size: 13px; font-weight: bold; border: 2px solid black; z-index: 100;
+        }
+
+        .feather { position: absolute; width: 8px; height: 12px; background: #eee; border-radius: 50% 50% 0 50%; pointer-events: none; animation: fly 0.8s forwards; }
+
+        .hud { position: absolute; top: -35px; width: 100px; text-align: center; }
+        .hp-bg { width: 100%; height: 8px; background: #000; border: 1px solid #555; border-radius: 4px; overflow: hidden; }
+        .hp-fill { height: 100%; background: #00e676; transition: width 0.1s; }
+        .dead { opacity: 0.5; filter: grayscale(1); transform: rotate(90deg); transition: 0.5s; }
+        .hammer-drop { position: absolute; font-size: 40px; animation: bounce 1s infinite alternate; filter: drop-shadow(0 0 10px gold); }
+        
+        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes peck { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(30deg) translateX(10px); } }
+        @keyframes fly { 100% { opacity: 0; transform: translate(var(--tx), var(--ty)) rotate(180deg); } }
+        @keyframes shake { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(2px, 2px); } 50% { transform: translate(-2px, -2px); } }
+    </style>
+</head>
+<body>
+    <div id="login-screen">
+        <h1>UFC GALO</h1>
+        <div style="display:flex; flex-direction:column; gap:10px; width:250px">
+            <input type="text" id="nick" placeholder="Apelido (max 10 letras)" maxlength="10" style="padding:10px; text-align:center;">
+            <select id="color" style="padding:10px">
+                <option value="branco">Galo Branco</option>
+                <option value="preto">Galo Preto</option>
+                <option value="vermelho">Galo Vingador</option>
+            </select>
+            <button onclick="enter()" style="padding:10px; background:#d32f2f; color:white; border:none; cursor:pointer; font-weight:bold;">ENTRAR NA RINHA</button>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <div id="leaderboard">
+            <h3 style="margin:0; color:#ffeb3b; text-align:center; font-size:14px;">🏆 TOP 5 GALOS</h3>
+            <div id="lb-list" style="margin-top:10px"></div>
+        </div>
+        <div id="announcement"></div>
+        <div id="winner-screen">
+            <div class="winner-text">CAMPEÃO DA RINHA</div>
+            <div class="winner-sub" id="winner-name" style="font-size:35px; color:gold; margin-top:10px">...</div>
+        </div>
+        <div style="position:absolute; bottom:10px; left:10px; color:rgba(255,255,255,0.4); font-size:11px;">
+            WASD: Mover | CLIQUE: Bicar/Martelar | ESPAÇO: Dash | 1, 2, 3: Provocar
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const arena = document.getElementById('game-container');
+        const notify = document.getElementById('announcement');
+        const winnerScreen = document.getElementById('winner-screen');
+        const winnerNameEl = document.getElementById('winner-name');
+        const lbList = document.getElementById('lb-list');
+        let myId = null;
+
+        function enter() {
+            const name = document.getElementById('nick').value.trim() || "Galo";
+            const color = document.getElementById('color').value;
+            socket.emit('join_game', { name, color });
+        }
+
+        socket.on('login_success', (c) => {
+            myId = c.id;
+            arena.style.width = c.width + 'px'; arena.style.height = c.height + 'px';
+            document.getElementById('login-screen').style.display = 'none';
+            setupControls();
+        });
+
+        socket.on('msg', (txt) => {
+            notify.innerText = txt; notify.classList.add('show');
+            setTimeout(() => notify.classList.remove('show'), 3000);
+        });
+
+        socket.on('update_leaderboard', (list) => {
+            lbList.innerHTML = '';
+            list.forEach((p, i) => {
+                const item = document.createElement('div');
+                item.className = 'lb-item' + (i === 0 ? ' top1' : '');
+                item.innerHTML = `<span style="font-size:13px">${i===0?'👑 ': (i+1)+'. '}${p.name}</span> <span style="float:right">${p.wins}</span>`;
+                lbList.appendChild(item);
+            });
+        });
+
+        socket.on('show_winner', (name) => {
+            winnerNameEl.innerText = name; winnerScreen.classList.add('visible');
+        });
+
+        socket.on('hide_winner', () => winnerScreen.classList.remove('visible'));
+
+        socket.on('hammer_spawn', (p) => {
+            let h = document.getElementById('h-drop') || document.createElement('div');
+            h.id = 'h-drop'; h.className = 'hammer-drop'; h.innerText = '🔨';
+            h.style.left = p.x + 'px'; h.style.top = p.y + 'px';
+            arena.appendChild(h);
+        });
+
+        socket.on('hammer_picked', () => document.getElementById('h-drop')?.remove());
+        
+        socket.on('action_anim', (data) => {
+            const el = document.getElementById(`p-${data.id}`);
+            if(el) { el.classList.remove('attacking'); void el.offsetWidth; el.classList.add('attacking'); }
+        });
+
+        socket.on('player_hit', (data) => {
+            const el = document.getElementById(`p-${data.id}`);
+            if(el) {
+                if(data.id === myId) {
+                    arena.classList.add('shake'); setTimeout(()=> arena.classList.remove('shake'), 300);
+                }
+                for(let i=0; i<5; i++) {
+                    const f = document.createElement('div'); f.className = 'feather';
+                    f.style.left = (el.offsetLeft+40)+'px'; f.style.top = (el.offsetTop+40)+'px';
+                    f.style.setProperty('--tx', (Math.random()-0.5)*80+'px');
+                    f.style.setProperty('--ty', (Math.random()-0.5)*80+'px');
+                    arena.appendChild(f); setTimeout(()=>f.remove(), 800);
+                }
+            }
+        });
+
+        socket.on('msg_bubble', (data) => {
+            const el = document.getElementById(`p-${data.id}`);
+            if(el) {
+                const b = document.createElement('div'); b.className = 'chat-bubble';
+                b.innerText = data.text; el.appendChild(b); setTimeout(() => b.remove(), 2000);
+            }
+        });
+
+        socket.on('update_state', (players) => {
+            Object.values(players).forEach(p => {
+                let el = document.getElementById(`p-${p.id}`);
+                if(!el) {
+                    el = document.createElement('div'); el.id = `p-${p.id}`; el.className = `rooster color-${p.color}`;
+                    el.innerHTML = `<div class="hud"><div style="font-size:11px;font-weight:bold">${p.name}</div><div class="hp-bg"><div class="hp-fill"></div></div></div>
+                                    <div class="rooster-inner"><div class="body"></div><div class="comb"></div><div class="eye"></div><div class="beak"></div><div class="held-hammer">🔨</div></div>`;
+                    arena.appendChild(el);
+                }
+                el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
+                el.querySelector('.hp-fill').style.width = p.hp + '%';
+                el.querySelector('.rooster-inner').style.transform = `scaleX(${p.direction})`;
+                p.hasHammer ? el.classList.add('has-hammer') : el.classList.remove('has-hammer');
+                p.hp <= 0 ? el.classList.add('dead') : el.classList.remove('dead');
+            });
+        });
+
+        function setupControls() {
+            const keys = {};
+            document.onkeydown = (e) => {
+                keys[e.key.toLowerCase()] = true;
+                if(e.key === ' ') socket.emit('dash');
+                if(['1','2','3'].includes(e.key)) socket.emit('taunt', parseInt(e.key)-1);
+            };
+            document.onkeyup = (e) => keys[e.key.toLowerCase()] = false;
+            setInterval(() => {
+                if(keys['w']) socket.emit('move', 'w'); if(keys['s']) socket.emit('move', 's');
+                if(keys['a']) socket.emit('move', 'a'); if(keys['d']) socket.emit('move', 'd');
+            }, 30);
+            window.onmousedown = (e) => {
+                if(!e.target.closest('#login-screen')) socket.emit('click_action');
+            };
+        }
+    </script>
+</body>
+</html>

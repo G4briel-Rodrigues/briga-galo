@@ -1,0 +1,17 @@
+{
+  "name": "briga-galo",
+  "version": "1.0.0",
+  "description": "Rinha de Galo Online",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
