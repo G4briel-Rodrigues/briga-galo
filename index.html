@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>UFC - Galo Edition 3.0</title>
+    <title>UFC - Galo Edition: Hammer & Corn</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto:wght@500&display=swap');
         body { background: #1a1a1a; color: white; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; user-select: none; }
@@ -50,20 +50,11 @@
         .comb { position: absolute; top: 5px; right: 25px; width: 20px; height: 15px; background: red; border-radius: 50% 50% 0 0; }
         
         .attacking .skin-wrapper { animation: peck 0.15s ease-in-out; }
-        .shooting .skin-wrapper { animation: recoil 0.2s ease-out; }
 
-        /* Itens na Mão */
-        .held-hammer, .held-gun { position: absolute; display: none; z-index: 20; }
-        
-        .held-hammer { top: -10px; right: -25px; font-size: 45px; transform: scaleX(-1) rotate(-15deg); }
+        /* Martelo na Mão */
+        .held-hammer { position: absolute; display: none; z-index: 20; top: -10px; right: -25px; font-size: 45px; transform: scaleX(-1) rotate(-15deg); }
         .has-hammer .held-hammer { display: block; }
-
-        .held-gun { top: 30px; right: -20px; font-size: 35px; transform: scaleX(-1); }
-        .has-gun .held-gun { display: block; }
         
-        /* TIRO (NOVO) */
-        .bullet { position: absolute; width: 10px; height: 6px; background: yellow; border: 1px solid red; border-radius: 4px; box-shadow: 0 0 5px orange; z-index: 10; }
-
         .chat-bubble {
             position: absolute; top: -55px; left: 50%; transform: translateX(-50%);
             background: white; color: black; padding: 4px 8px; border-radius: 8px;
@@ -83,14 +74,13 @@
         @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         @keyframes peck { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(30deg) translateX(10px); } }
-        @keyframes recoil { 0% { transform: translateX(0); } 20% { transform: translateX(-10px); } 100% { transform: translateX(0); } }
         @keyframes fly { 100% { opacity: 0; transform: translate(var(--tx), var(--ty)) rotate(180deg); } }
         @keyframes shake { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(2px, 2px); } 50% { transform: translate(-2px, -2px); } }
     </style>
 </head>
 <body>
     <div id="login-screen">
-        <h1>UFC GALO 3.0</h1>
+        <h1>UFC GALO 3.2</h1>
         <div style="display:flex; flex-direction:column; gap:10px; width:250px">
             <input type="text" id="nick" placeholder="Apelido (max 10 letras)" maxlength="10" style="padding:10px; text-align:center;">
             <select id="color" style="padding:10px">
@@ -113,7 +103,7 @@
             <div class="winner-sub" id="winner-name" style="font-size:35px; color:gold; margin-top:10px">...</div>
         </div>
         <div style="position:absolute; bottom:10px; left:10px; color:rgba(255,255,255,0.4); font-size:11px;">
-            WASD: Mover | CLIQUE: Bicar/Atirar | ESPAÇO: Dash | 1, 2, 3: Provocar
+            WASD: Mover | CLIQUE: Bicar/Marretar | ESPAÇO: Dash | 1, 2, 3: Provocar
         </div>
     </div>
 
@@ -161,7 +151,7 @@
 
         socket.on('hide_winner', () => winnerScreen.classList.remove('visible'));
 
-        // --- SISTEMA DE ITENS VISUAIS ---
+        // --- SISTEMA DE ITENS ---
         function spawnItem(id, emoji, x, y) {
             let el = document.getElementById(id) || document.createElement('div');
             el.id = id; el.className = 'item-drop'; el.innerText = emoji;
@@ -170,7 +160,6 @@
         }
 
         socket.on('hammer_spawn', (p) => spawnItem(p.id, '🔨', p.x, p.y));
-        socket.on('gun_spawn', (p) => spawnItem(p.id, '🔫', p.x, p.y));
         socket.on('corn_spawn', (p) => spawnItem(p.id, '🌽', p.x, p.y));
 
         socket.on('item_update', (data) => {
@@ -187,10 +176,9 @@
         socket.on('action_anim', (data) => {
             const el = document.getElementById(`p-${data.id}`);
             if(el) { 
-                const cls = data.type === 'shoot' ? 'shooting' : 'attacking';
-                el.classList.remove('attacking', 'shooting'); 
+                el.classList.remove('attacking'); 
                 void el.offsetWidth; 
-                el.classList.add(cls); 
+                el.classList.add('attacking'); 
             }
         });
 
@@ -205,7 +193,6 @@
                     f.style.left = (el.offsetLeft+40)+'px'; f.style.top = (el.offsetTop+40)+'px';
                     f.style.setProperty('--tx', (Math.random()-0.5)*80+'px');
                     f.style.setProperty('--ty', (Math.random()-0.5)*80+'px');
-                    if(data.byGun) f.style.background = 'red'; // Sangue no tiro
                     arena.appendChild(f); setTimeout(()=>f.remove(), 800);
                 }
             }
@@ -226,7 +213,7 @@
                     el = document.createElement('div'); el.id = `p-${p.id}`; el.className = `rooster color-${p.color}`;
                     el.innerHTML = `<div class="hud"><div style="font-size:11px;font-weight:bold">${p.name}</div><div class="hp-bg"><div class="hp-fill"></div></div></div>
                                     <div class="rooster-inner"><div class="skin-wrapper"><div class="body"></div><div class="comb"></div><div class="eye"></div><div class="beak"></div>
-                                    <div class="held-hammer">🔨</div><div class="held-gun">🔫</div></div></div>`;
+                                    <div class="held-hammer">🔨</div></div></div>`;
                     arena.appendChild(el);
                 }
                 el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
@@ -235,24 +222,7 @@
                 el.querySelector('.rooster-inner').style.transform = `scaleX(${p.direction})`;
                 
                 p.hasHammer ? el.classList.add('has-hammer') : el.classList.remove('has-hammer');
-                p.hasGun ? el.classList.add('has-gun') : el.classList.remove('has-gun');
-                
                 p.hp <= 0 ? el.classList.add('dead') : el.classList.remove('dead');
-            });
-        });
-
-        // ATUALIZAÇÃO DOS TIROS (BALAS)
-        socket.on('update_bullets', (bullets) => {
-            // Remove balas antigas
-            document.querySelectorAll('.bullet').forEach(b => b.remove());
-            
-            // Desenha novas
-            bullets.forEach(b => {
-                const el = document.createElement('div');
-                el.className = 'bullet';
-                el.style.left = b.x + 'px';
-                el.style.top = b.y + 'px';
-                arena.appendChild(el);
             });
         });
 
@@ -265,7 +235,6 @@
             };
             document.onkeyup = (e) => keys[e.key.toLowerCase()] = false;
             
-            // Loop de envio de movimento (30fps)
             setInterval(() => {
                 if(keys['w']) socket.emit('move', 'w'); if(keys['s']) socket.emit('move', 's');
                 if(keys['a']) socket.emit('move', 'a'); if(keys['d']) socket.emit('move', 'd');
