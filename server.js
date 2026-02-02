@@ -196,6 +196,5 @@ io.on('connection', (socket) => {
     });
 });
 
-// CONFIGURAÇÃO DE PORTA DINÂMICA PARA O RENDER
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => console.log(`UFC GALO RODANDO NA PORTA: ${PORT}`));
