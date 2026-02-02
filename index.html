@@ -38,7 +38,11 @@
         .lb-item.top1 { color: gold; font-weight: bold; }
 
         .rooster { width: 80px; height: 80px; position: absolute; pointer-events: none; } 
+        /* rooster-inner controla apenas a direção (esquerda/direita) */
         .rooster-inner { width: 100%; height: 100%; position: relative; transform-origin: center; transition: transform 0.1s; }
+        
+        /* skin-wrapper controla a animação do ataque, sem bugar a direção */
+        .skin-wrapper { width: 100%; height: 100%; position: relative; }
 
         .body { width: 50px; height: 60px; border-radius: 50% 50% 40% 40%; position: absolute; top: 15px; left: 15px; box-shadow: inset -5px -5px 10px rgba(0,0,0,0.3); }
         .color-branco .body { background: #fff; } 
@@ -48,7 +52,9 @@
         .beak { position: absolute; top: 30px; right: 8px; width: 15px; height: 10px; background: orange; border-radius: 0 50% 50% 0; }
         .comb { position: absolute; top: 5px; right: 25px; width: 20px; height: 15px; background: red; border-radius: 50% 50% 0 0; }
         
-        .attacking .rooster-inner { animation: peck 0.15s ease-in-out; }
+        /* Agora a animação é aplicada no skin-wrapper, que é filho do inner */
+        .attacking .skin-wrapper { animation: peck 0.15s ease-in-out; }
+
         .held-hammer { position: absolute; top: -10px; right: -25px; font-size: 45px; display: none; z-index: 20; transform: scaleX(-1) rotate(-15deg); }
         .has-hammer .held-hammer { display: block; }
         
@@ -189,12 +195,14 @@
                 let el = document.getElementById(`p-${p.id}`);
                 if(!el) {
                     el = document.createElement('div'); el.id = `p-${p.id}`; el.className = `rooster color-${p.color}`;
+                    // AQUI ESTÁ A CORREÇÃO PRINCIPAL: Adicionado skin-wrapper
                     el.innerHTML = `<div class="hud"><div style="font-size:11px;font-weight:bold">${p.name}</div><div class="hp-bg"><div class="hp-fill"></div></div></div>
-                                    <div class="rooster-inner"><div class="body"></div><div class="comb"></div><div class="eye"></div><div class="beak"></div><div class="held-hammer">🔨</div></div>`;
+                                    <div class="rooster-inner"><div class="skin-wrapper"><div class="body"></div><div class="comb"></div><div class="eye"></div><div class="beak"></div><div class="held-hammer">🔨</div></div></div>`;
                     arena.appendChild(el);
                 }
                 el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
                 el.querySelector('.hp-fill').style.width = p.hp + '%';
+                // O scaleX é aplicado no INNER, e a animação vai no SKIN-WRAPPER (via CSS), evitando conflito
                 el.querySelector('.rooster-inner').style.transform = `scaleX(${p.direction})`;
                 p.hasHammer ? el.classList.add('has-hammer') : el.classList.remove('has-hammer');
                 p.hp <= 0 ? el.classList.add('dead') : el.classList.remove('dead');
