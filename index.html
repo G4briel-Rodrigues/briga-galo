@@ -2,14 +2,52 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>UFC - Galo Edition: Hammer & Corn</title>
+    <title>UFC - Galo Battle Royale</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto:wght@500&display=swap');
-        body { background: #1a1a1a; color: white; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; user-select: none; }
-        #login-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #login-screen h1 { font-family: 'Black Ops One', cursive; font-size: 60px; color: #d32f2f; margin-bottom: 20px; }
-        #game-container { position: relative; border: 10px solid #5d4037; background-color: #3e2723; overflow: hidden; cursor: crosshair; }
+        @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto:wght@500;900&display=swap');
+        
+        body { 
+            background: #1a1a1a; 
+            color: white; 
+            font-family: 'Roboto', sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden; 
+            user-select: none; 
+        }
+
+        #login-screen { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 999; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        }
+        #login-screen h1 { 
+            font-family: 'Black Ops One', cursive; font-size: 60px; color: #d32f2f; margin-bottom: 20px; 
+        }
+
+        #game-container { 
+            position: relative; 
+            border: 10px solid #5d4037; 
+            background-color: #3e2723; 
+            overflow: hidden; 
+            cursor: crosshair; 
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        /* Cerca Elétrica (Visual) */
+        #game-container::after {
+            content: ''; position: absolute; inset: 0;
+            border: 4px dashed rgba(255, 235, 59, 0.3);
+            pointer-events: none;
+            box-shadow: inset 0 0 20px rgba(255, 0, 0, 0.2);
+            z-index: 5;
+        }
+
         .shake { animation: shake 0.3s; }
+        .flash-electric { animation: flashElectric 0.2s; }
 
         #announcement {
             position: absolute; top: 15%; left: 50%; transform: translate(-50%, -50%) scale(0);
@@ -25,85 +63,119 @@
             z-index: 200; pointer-events: none; opacity: 0; transition: opacity 0.5s;
         }
         #winner-screen.visible { opacity: 1; pointer-events: auto; }
-        .winner-text {
-            font-family: 'Black Ops One', cursive; font-size: 70px; color: gold; 
-            text-shadow: 0 0 20px #ff6f00, 4px 4px 0px black; animation: pulse 1s infinite;
-        }
-
-        #leaderboard {
-            position: absolute; top: 20px; right: 20px;
-            background: rgba(0, 0, 0, 0.7); padding: 15px;
-            border-radius: 10px; border: 2px solid #5d4037; width: 200px; z-index: 50;
-        }
-        .lb-item.top1 { color: gold; font-weight: bold; }
-
-        .rooster { width: 80px; height: 80px; position: absolute; pointer-events: none; transition: top 0.1s linear, left 0.1s linear; } 
-        .rooster-inner { width: 100%; height: 100%; position: relative; transform-origin: center; transition: transform 0.1s; }
-        .skin-wrapper { width: 100%; height: 100%; position: relative; }
-
-        .body { width: 50px; height: 60px; border-radius: 50% 50% 40% 40%; position: absolute; top: 15px; left: 15px; box-shadow: inset -5px -5px 10px rgba(0,0,0,0.3); }
-        .color-branco .body { background: #fff; } 
-        .color-preto .body { background: #222; } 
-        .color-vermelho .body { background: #d32f2f; }
-        .eye { position: absolute; top: 25px; right: 20px; width: 6px; height: 6px; background: #000; border-radius: 50%; border: 1px solid gold; }
-        .beak { position: absolute; top: 30px; right: 8px; width: 15px; height: 10px; background: orange; border-radius: 0 50% 50% 0; }
-        .comb { position: absolute; top: 5px; right: 25px; width: 20px; height: 15px; background: red; border-radius: 50% 50% 0 0; }
         
-        .attacking .skin-wrapper { animation: peck 0.15s ease-in-out; }
+        /* RANKING: Canto direito, menor e transparente */
+        #leaderboard {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(0, 0, 0, 0.4); 
+            padding: 8px;
+            border-radius: 8px; 
+            width: 150px; z-index: 50;
+            pointer-events: none;
+            border: 1px solid rgba(255,255,255,0.1);
+            transform: scale(0.85);
+            transform-origin: top right;
+        }
 
-        /* Martelo na Mão */
-        .held-hammer { position: absolute; display: none; z-index: 20; top: -10px; right: -25px; font-size: 45px; transform: scaleX(-1) rotate(-15deg); }
+        /* GALO */
+        .rooster { 
+            width: 60px; height: 60px; 
+            position: absolute; 
+            pointer-events: none; 
+            transition: top 0.1s linear, left 0.1s linear;
+            z-index: 10;
+        } 
+        
+        .rooster-inner { 
+            width: 100%; height: 100%; 
+            position: relative; 
+            transform-origin: center; 
+            transition: transform 0.1s; 
+        }
+
+        .body { 
+            width: 40px; height: 50px; 
+            border-radius: 50% 50% 40% 40%; 
+            position: absolute; top: 10px; left: 10px; 
+            box-shadow: inset -3px -3px 8px rgba(0,0,0,0.3); 
+            border: 2px solid rgba(0,0,0,0.2);
+        }
+        
+        .color-branco .body { background: #f0f0f0; } 
+        .color-preto .body { background: #222; border-color: #555; } 
+        .color-vermelho .body { background: #d32f2f; }
+
+        .eye { position: absolute; top: 18px; right: 15px; width: 5px; height: 5px; background: #000; border-radius: 50%; border: 1px solid white; z-index: 2; }
+        .beak { position: absolute; top: 22px; right: 2px; width: 12px; height: 8px; background: orange; border-radius: 0 50% 50% 0; z-index: 1; }
+        .comb { position: absolute; top: 2px; right: 18px; width: 15px; height: 12px; background: red; border-radius: 50% 50% 0 0; z-index: 1; }
+        .wing { position: absolute; top: 25px; left: 5px; width: 20px; height: 20px; background: rgba(0,0,0,0.1); border-radius: 50%; z-index: 2; }
+
+        .attacking .rooster-inner { animation: peck 0.15s ease-in-out; }
+
+        .held-hammer { position: absolute; display: none; z-index: 20; top: -15px; right: -20px; font-size: 35px; transform: scaleX(-1) rotate(-15deg); filter: drop-shadow(2px 2px 0 black); }
         .has-hammer .held-hammer { display: block; }
         
         .chat-bubble {
-            position: absolute; top: -55px; left: 50%; transform: translateX(-50%);
+            position: absolute; top: -50px; left: 50%; transform: translateX(-50%);
             background: white; color: black; padding: 4px 8px; border-radius: 8px;
-            font-size: 13px; font-weight: bold; border: 2px solid black; z-index: 100;
+            font-size: 12px; font-weight: bold; border: 2px solid black; z-index: 100; white-space: nowrap;
         }
 
-        .feather { position: absolute; width: 8px; height: 12px; background: #eee; border-radius: 50% 50% 0 50%; pointer-events: none; animation: fly 0.8s forwards; }
+        .crit-text {
+            position: absolute; top: -40px; left: 50%; transform: translateX(-50%);
+            color: #ff0; font-family: 'Black Ops One'; font-size: 18px;
+            text-shadow: 2px 2px red; animation: floatUp 1s forwards; z-index: 101;
+        }
 
-        .hud { position: absolute; top: -35px; width: 100px; text-align: center; }
-        .hp-bg { width: 100%; height: 8px; background: #000; border: 1px solid #555; border-radius: 4px; overflow: hidden; }
+        /* Partículas */
+        .feather { position: absolute; width: 6px; height: 10px; background: #eee; border-radius: 50% 50% 0 50%; pointer-events: none; animation: fly 0.8s forwards; z-index: 90; }
+        .blood { position: absolute; width: 4px; height: 4px; background: #b71c1c; border-radius: 50%; pointer-events: none; animation: fly 0.5s forwards; z-index: 89; }
+
+        .hud { position: absolute; top: -30px; width: 80px; left: -10px; text-align: center; }
+        .hp-bg { width: 100%; height: 6px; background: #000; border: 1px solid #555; border-radius: 4px; overflow: hidden; }
         .hp-fill { height: 100%; background: #00e676; transition: width 0.1s; }
+        
         .dead { opacity: 0.5; filter: grayscale(1); transform: rotate(90deg); transition: 0.5s; }
         
-        /* Itens no Chão */
-        .item-drop { position: absolute; animation: bounce 1s infinite alternate; font-size: 40px; filter: drop-shadow(0 0 10px gold); }
+        .item-drop { position: absolute; animation: bounce 1s infinite alternate; font-size: 35px; filter: drop-shadow(0 0 5px white); z-index: 5; }
         
-        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-8px); } }
         @keyframes peck { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(30deg) translateX(10px); } }
         @keyframes fly { 100% { opacity: 0; transform: translate(var(--tx), var(--ty)) rotate(180deg); } }
-        @keyframes shake { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(2px, 2px); } 50% { transform: translate(-2px, -2px); } }
+        @keyframes shake { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(3px, 3px); } 50% { transform: translate(-3px, -3px); } }
+        @keyframes floatUp { 0% { opacity: 1; transform: translate(-50%, 0) scale(1); } 100% { opacity: 0; transform: translate(-50%, -40px) scale(1.5); } }
+        @keyframes flashElectric { 0%, 100% { background: #3e2723; } 50% { background: #555; } }
     </style>
 </head>
 <body>
     <div id="login-screen">
-        <h1>UFC GALO 3.2</h1>
+        <h1>UFC GALO 7.1</h1>
         <div style="display:flex; flex-direction:column; gap:10px; width:250px">
-            <input type="text" id="nick" placeholder="Apelido (max 10 letras)" maxlength="10" style="padding:10px; text-align:center;">
-            <select id="color" style="padding:10px">
+            <input type="text" id="nick" placeholder="Apelido (Max 15)" maxlength="15" style="padding:10px; text-align:center; font-weight:bold; border-radius:5px; border:none;">
+            <select id="color" style="padding:10px; border-radius:5px; border:none;">
                 <option value="branco">Galo Branco</option>
                 <option value="preto">Galo Preto</option>
                 <option value="vermelho">Galo Vingador</option>
             </select>
-            <button onclick="enter()" style="padding:10px; background:#d32f2f; color:white; border:none; cursor:pointer; font-weight:bold;">ENTRAR NA RINHA</button>
+            <button onclick="enter()" style="padding:10px; background:#d32f2f; color:white; border:none; cursor:pointer; font-weight:bold; border-radius:5px; font-size:16px;">ENTRAR NA RINHA</button>
         </div>
     </div>
 
     <div id="game-container">
         <div id="leaderboard">
-            <h3 style="margin:0; color:#ffeb3b; text-align:center; font-size:14px;">🏆 TOP 5 GALOS</h3>
-            <div id="lb-list" style="margin-top:10px"></div>
+            <h3 style="margin:0; color:#ffeb3b; text-align:center; font-size:12px; border-bottom:1px solid #555; padding-bottom:3px; text-transform: uppercase;">Top Galos</h3>
+            <div id="lb-list" style="margin-top:5px; font-size:11px;"></div>
         </div>
+        
         <div id="announcement"></div>
+        
         <div id="winner-screen">
-            <div class="winner-text">CAMPEÃO DA RINHA</div>
-            <div class="winner-sub" id="winner-name" style="font-size:35px; color:gold; margin-top:10px">...</div>
+            <div style="font-family: 'Black Ops One'; font-size: 40px; color: white;">CAMPEÃO</div>
+            <div id="winner-name" style="font-family: 'Black Ops One'; font-size: 60px; color: gold; text-shadow: 4px 4px 0px black;">...</div>
         </div>
-        <div style="position:absolute; bottom:10px; left:10px; color:rgba(255,255,255,0.4); font-size:11px;">
-            WASD: Mover | CLIQUE: Bicar/Marretar | ESPAÇO: Dash | 1, 2, 3: Provocar
+        
+        <div style="position:absolute; bottom:5px; left:10px; color:rgba(255,255,255,0.3); font-size:10px; pointer-events:none;">
+            WASD: Mover | CLIQUE: Bicar/Marretar | ESPAÇO: Dash | 1-4: Provocar
         </div>
     </div>
 
@@ -139,8 +211,11 @@
             lbList.innerHTML = '';
             list.forEach((p, i) => {
                 const item = document.createElement('div');
-                item.className = 'lb-item' + (i === 0 ? ' top1' : '');
-                item.innerHTML = `<span style="font-size:13px">${i===0?'👑 ': (i+1)+'. '}${p.name}</span> <span style="float:right">${p.wins}</span>`;
+                item.style.marginBottom = '3px';
+                item.style.display = 'flex';
+                item.style.justifyContent = 'space-between';
+                item.style.color = i === 0 ? '#ffd700' : '#ddd';
+                item.innerHTML = `<span>${i+1}. ${p.name.substring(0,10)}</span> <span>${p.wins} W</span>`;
                 lbList.appendChild(item);
             });
         });
@@ -151,7 +226,6 @@
 
         socket.on('hide_winner', () => winnerScreen.classList.remove('visible'));
 
-        // --- SISTEMA DE ITENS ---
         function spawnItem(id, emoji, x, y) {
             let el = document.getElementById(id) || document.createElement('div');
             el.id = id; el.className = 'item-drop'; el.innerText = emoji;
@@ -186,14 +260,32 @@
             const el = document.getElementById(`p-${data.id}`);
             if(el) {
                 if(data.id === myId) {
-                    arena.classList.add('shake'); setTimeout(()=> arena.classList.remove('shake'), 300);
+                    if(data.electric) {
+                        arena.classList.add('flash-electric');
+                        setTimeout(()=> arena.classList.remove('flash-electric'), 200);
+                    } else {
+                        arena.classList.add('shake'); 
+                        setTimeout(()=> arena.classList.remove('shake'), 300);
+                    }
                 }
-                for(let i=0; i<5; i++) {
-                    const f = document.createElement('div'); f.className = 'feather';
-                    f.style.left = (el.offsetLeft+40)+'px'; f.style.top = (el.offsetTop+40)+'px';
-                    f.style.setProperty('--tx', (Math.random()-0.5)*80+'px');
-                    f.style.setProperty('--ty', (Math.random()-0.5)*80+'px');
-                    arena.appendChild(f); setTimeout(()=>f.remove(), 800);
+                
+                if(data.crit) {
+                    const c = document.createElement('div'); c.className = 'crit-text'; c.innerText = "CRÍTICO!";
+                    el.appendChild(c); setTimeout(() => c.remove(), 1000);
+                }
+
+                // Efeito visual: Sangue ou Penas
+                const particleCount = data.electric ? 4 : 3;
+                for(let i=0; i<particleCount; i++) {
+                    const type = (data.electric || Math.random() > 0.5) ? 'feather' : 'blood';
+                    const f = document.createElement('div'); 
+                    f.className = type;
+                    f.style.left = (30)+'px'; f.style.top = (30)+'px'; // Centro relativo ao galo
+                    f.style.setProperty('--tx', (Math.random()-0.5)*100+'px');
+                    f.style.setProperty('--ty', (Math.random()-0.5)*100+'px');
+                    if(data.electric && type === 'feather') f.style.background = "#ffeb3b";
+                    el.appendChild(f); 
+                    setTimeout(()=>f.remove(), 800);
                 }
             }
         });
@@ -207,17 +299,41 @@
         });
 
         socket.on('update_state', (players) => {
+            // Remove quem saiu
+            const currentIds = Object.keys(players).map(id => `p-${id}`);
+            document.querySelectorAll('.rooster').forEach(el => {
+                if (!currentIds.includes(el.id)) el.remove();
+            });
+
             Object.values(players).forEach(p => {
                 let el = document.getElementById(`p-${p.id}`);
                 if(!el) {
-                    el = document.createElement('div'); el.id = `p-${p.id}`; el.className = `rooster color-${p.color}`;
-                    el.innerHTML = `<div class="hud"><div style="font-size:11px;font-weight:bold">${p.name}</div><div class="hp-bg"><div class="hp-fill"></div></div></div>
-                                    <div class="rooster-inner"><div class="skin-wrapper"><div class="body"></div><div class="comb"></div><div class="eye"></div><div class="beak"></div>
-                                    <div class="held-hammer">🔨</div></div></div>`;
+                    el = document.createElement('div'); 
+                    el.id = `p-${p.id}`; 
+                    el.className = `rooster color-${p.color}`;
+                    el.innerHTML = `
+                        <div class="hud">
+                            <div style="font-size:10px;font-weight:bold;text-shadow:1px 1px 0 #000;">${p.name}</div>
+                            <div class="hp-bg"><div class="hp-fill"></div></div>
+                        </div>
+                        <div class="rooster-inner">
+                            <div class="body"></div>
+                            <div class="comb"></div>
+                            <div class="eye"></div>
+                            <div class="beak"></div>
+                            <div class="wing"></div>
+                            <div class="held-hammer">🔨</div>
+                        </div>`;
                     arena.appendChild(el);
                 }
-                el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
-                el.querySelector('.hp-fill').style.width = p.hp + '%';
+                
+                // Atualização suave
+                el.style.left = p.x + 'px'; 
+                el.style.top = p.y + 'px';
+                
+                const fill = el.querySelector('.hp-fill');
+                fill.style.width = Math.max(0, p.hp) + '%';
+                fill.style.background = p.hp < 30 ? '#ff1744' : '#00e676';
                 
                 el.querySelector('.rooster-inner').style.transform = `scaleX(${p.direction})`;
                 
@@ -231,13 +347,16 @@
             document.onkeydown = (e) => {
                 keys[e.key.toLowerCase()] = true;
                 if(e.key === ' ') socket.emit('dash');
-                if(['1','2','3'].includes(e.key)) socket.emit('taunt', parseInt(e.key)-1);
+                if(['1','2','3','4'].includes(e.key)) socket.emit('taunt', parseInt(e.key)-1);
             };
             document.onkeyup = (e) => keys[e.key.toLowerCase()] = false;
             
+            // Loop de envio de movimento (30ms)
             setInterval(() => {
-                if(keys['w']) socket.emit('move', 'w'); if(keys['s']) socket.emit('move', 's');
-                if(keys['a']) socket.emit('move', 'a'); if(keys['d']) socket.emit('move', 'd');
+                if(keys['w']) socket.emit('move', 'w'); 
+                if(keys['s']) socket.emit('move', 's');
+                if(keys['a']) socket.emit('move', 'a'); 
+                if(keys['d']) socket.emit('move', 'd');
             }, 30);
             
             window.onmousedown = (e) => {
