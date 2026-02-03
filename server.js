@@ -10,7 +10,7 @@ const io = socketIo(server);
 const MAP_WIDTH = 1000;
 const MAP_HEIGHT = 700;
 const PLAYER_SIZE = 70;
-const MAX_PLAYERS = 7; // Limite de 7 jogadores
+const MAX_PLAYERS = 7; 
 
 // Danos e Curas
 const HP_MAX = 100;
@@ -24,6 +24,19 @@ const MAX_HAMMERS = 5;
 const CORN_INTERVAL_MS = 30000;
 const HAMMER_INTERVAL_MS = 40000;
 
+// Configuração Pulo e Desaforo
+const DASH_COOLDOWN = 20000; // 20 segundos
+const DASH_FORCE = 180; // Distância do pulo
+
+// Lista de desaforos (Keys 1-5)
+const TAUNTS = {
+    '1': "SEU FRANGO!",
+    '2': "SEU GALINHO FRACO!",
+    '3': "VIRA CANJA!",
+    '4': "VOLTA PRO OVO!",
+    '5': "CÓ-CÓ-COVARDE!"
+};
+
 let players = {};
 let items = [];
 let gameLoopInterval = null;
@@ -36,7 +49,6 @@ app.get('/', (req, res) => { res.sendFile(__dirname + '/index.html'); });
 io.on('connection', (socket) => {
     
     socket.on('join_game', (data) => {
-        // Verifica se a sala está cheia
         if (Object.keys(players).length >= MAX_PLAYERS) {
             socket.emit('login_error', 'A RINHA ESTÁ CHEIA! (Máx 7 Galos)');
             return;
@@ -55,12 +67,12 @@ io.on('connection', (socket) => {
             hasHammer: false,
             dead: false,
             speed: 8,
-            lastAttack: 0
+            lastAttack: 0,
+            lastDash: 0 // Timestamp do ultimo pulo
         };
         
         socket.emit('login_success', { id: socket.id, width: MAP_WIDTH, height: MAP_HEIGHT });
         
-        // Inicia o jogo se for o primeiro
         if (!gameLoopInterval) startGameLoop();
     });
 
@@ -75,6 +87,77 @@ io.on('connection', (socket) => {
 
         p.x = Math.max(0, Math.min(MAP_WIDTH - PLAYER_SIZE, p.x));
         p.y = Math.max(0, Math.min(MAP_HEIGHT - PLAYER_SIZE, p.y));
+    });
+
+    // SISTEMA DE PULO (ESQUIVA)
+    socket.on('dash_action', () => {
+        const p = players[socket.id];
+        if (!p || p.dead) return;
+
+        const now = Date.now();
+        if (now - p.lastDash < DASH_COOLDOWN) {
+            // Avisa o cliente quanto tempo falta
+            socket.emit('dash_cooldown', DASH_COOLDOWN - (now - p.lastDash));
+            return;
+        }
+
+        // Encontrar o oponente mais próximo para pular PARA LONGE dele
+        let closestEnemy = null;
+        let minDist = Infinity;
+
+        Object.values(players).forEach(other => {
+            if (other.id !== p.id && !other.dead) {
+                const dist = Math.hypot(other.x - p.x, other.y - p.y);
+                if (dist < minDist) {
+                    minDist = dist;
+                    closestEnemy = other;
+                }
+            }
+        });
+
+        let vectorX = 0;
+        let vectorY = 0;
+
+        if (closestEnemy) {
+            // Vetor Fugindo do inimigo (MeuPos - InimigoPos)
+            let dx = p.x - closestEnemy.x;
+            let dy = p.y - closestEnemy.y;
+            
+            // Normalizar
+            const len = Math.hypot(dx, dy);
+            if (len > 0) {
+                vectorX = (dx / len) * DASH_FORCE;
+                vectorY = (dy / len) * DASH_FORCE;
+            } else {
+                // Estão na mesma posição, sorteia
+                vectorX = DASH_FORCE; 
+            }
+        } else {
+            // Se não tem inimigo, pula para trás (oposto da direção que olha)
+            vectorX = (p.direction * -1) * DASH_FORCE;
+        }
+
+        p.x += vectorX;
+        p.y += vectorY;
+        
+        // Limites do mapa
+        p.x = Math.max(0, Math.min(MAP_WIDTH - PLAYER_SIZE, p.x));
+        p.y = Math.max(0, Math.min(MAP_HEIGHT - PLAYER_SIZE, p.y));
+
+        p.lastDash = now;
+        
+        // Atualiza imediatamente para parecer rápido
+        io.emit('update_state', players);
+    });
+
+    // SISTEMA DE DESAFORO (DEBOCHE)
+    socket.on('taunt', (key) => {
+        const p = players[socket.id];
+        if (!p || p.dead) return;
+
+        if (TAUNTS[key]) {
+            io.emit('taunt_display', { id: p.id, msg: TAUNTS[key] });
+        }
     });
 
     socket.on('click_action', () => {
@@ -144,7 +227,6 @@ function startGameLoop() {
         Object.values(players).forEach(p => {
             if(p.dead) return;
 
-            // Loop reverso para poder remover itens sem bugar o array
             for (let i = items.length - 1; i >= 0; i--) {
                 const it = items[i];
                 const dist = Math.hypot((p.x + PLAYER_SIZE/2) - it.x, (p.y + PLAYER_SIZE/2) - it.y);
@@ -153,7 +235,6 @@ function startGameLoop() {
                     let picked = false;
 
                     if (it.type === 'hammer') {
-                        // Só pega se NÃO tiver martelo ainda
                         if (!p.hasHammer) {
                             p.hasHammer = true;
                             picked = true;
@@ -201,10 +282,10 @@ function checkWinCondition() {
                 p.hasHammer = false;
                 p.x = Math.random() * (MAP_WIDTH - 100) + 50;
                 p.y = Math.random() * (MAP_HEIGHT - 100) + 50;
+                p.lastDash = 0; // Reseta pulo na nova rodada
             });
             items = []; 
             gameOverPending = false;
-            io.emit('msg', "NOVA RODADA!");
         }, 5000);
     }
 }
