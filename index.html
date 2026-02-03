@@ -2,69 +2,119 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>UFC GALO 7.2</title>
+    <title>UFC GALO 7.2 - BLOOD EDITION</title>
     <style>
-        body { background: #1a1a1a; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
-        #game-container { position: relative; border: 8px solid #5d4037; background: #3e2723; }
-        #login-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        
-        /* O GALO */
-        .rooster { position: absolute; width: 60px; height: 60px; transition: 0.05s linear; }
-        .rooster-inner { width: 100%; height: 100%; position: relative; }
-        .body { width: 40px; height: 45px; background: #eee; border-radius: 50%; position: absolute; bottom: 5px; left: 10px; }
-        .color-preto .body { background: #222; }
-        .color-vermelho .body { background: #b71c1c; }
-        .beak { position: absolute; top: 20px; right: 2px; width: 12px; height: 8px; background: orange; border-radius: 0 50% 50% 0; }
-        .comb { position: absolute; top: 5px; right: 15px; width: 15px; height: 12px; background: red; border-radius: 50% 50% 0 0; }
-        .held-hammer { position: absolute; top: -10px; right: -15px; font-size: 30px; display: none; }
-        .has-hammer .held-hammer { display: block; }
+        body { 
+            background: #0f0f0f; 
+            color: white; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden; 
+            user-select: none;
+        }
+        #login-screen { 
+            position: fixed; inset: 0; 
+            background: radial-gradient(circle, rgba(20,20,20,0.95) 0%, rgba(0,0,0,1) 100%); 
+            z-index: 1000; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        }
+        #login-screen h1 { color: #d32f2f; font-size: 4rem; text-shadow: 0 0 10px red; margin-bottom: 20px; font-weight: 900; }
+        input, select, button { padding: 15px; margin: 5px; border-radius: 5px; border: none; font-size: 1.2rem; }
+        button { background: #d32f2f; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { background: #b71c1c; transform: scale(1.1); }
+        .error-msg { color: #ffeb3b; margin-top: 10px; font-weight: bold; display: none; }
 
-        /* ANIMAÇÃO DE ATAQUE DIRECIONAL */
-        .attacking .rooster-inner { animation: peckAnim 0.05s ease-in-out; }
-        @keyframes peckAnim {
-            0% { transform: scaleX(1); }
-            50% { transform: scaleX(1.3) translateX(10px); }
-            100% { transform: scaleX(1); }
+        #game-container { 
+            position: relative; 
+            border: 12px solid #3e2723; 
+            background: #5d4037; 
+            background-image: radial-gradient(#6d4c41 20%, transparent 20%), radial-gradient(#4e342e 20%, transparent 20%);
+            background-size: 50px 50px;
+            background-position: 0 0, 25px 25px;
+            box-shadow: inset 0 0 50px #000;
         }
 
-        .hp-bar { position: absolute; top: -15px; width: 60px; height: 6px; background: #000; border: 1px solid #fff; }
-        .hp-fill { height: 100%; background: #00ff00; width: 100%; transition: 0.1s; }
-        .item-drop { position: absolute; font-size: 30px; }
-        #leaderboard { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; }
+        /* O GALO */
+        .rooster { position: absolute; width: 70px; height: 70px; transition: top 0.05s linear, left 0.05s linear; pointer-events: none; }
+        .rooster-inner { width: 100%; height: 100%; position: relative; }
+        
+        .body { width: 50px; height: 55px; border-radius: 50% 50% 40% 40%; position: absolute; bottom: 5px; left: 10px; box-shadow: inset -5px -5px 10px rgba(0,0,0,0.5); }
+        .wing { width: 30px; height: 25px; position: absolute; top: 25px; left: 15px; border-radius: 0 0 50% 50%; opacity: 0.8; transform-origin: top; }
+        
+        .color-branco .body { background: #f5f5f5; } .color-branco .wing { background: #e0e0e0; border: 1px solid #ccc; }
+        .color-preto .body { background: #1a1a1a; } .color-preto .wing { background: #000; border: 1px solid #333; }
+        .color-vermelho .body { background: #c62828; } .color-vermelho .wing { background: #8e0000; border: 1px solid #550000; }
+
+        .eye { position: absolute; top: 15px; right: 12px; width: 10px; height: 10px; background: white; border-radius: 50%; border: 1px solid black; z-index: 2; }
+        .pupil { width: 3px; height: 3px; background: black; border-radius: 50%; position: absolute; top: 3px; right: 2px; }
+        .beak { position: absolute; top: 22px; right: -2px; width: 16px; height: 10px; background: #ff9800; border-radius: 0 50% 10% 0; border: 1px solid #e65100; z-index: 1; }
+        .comb { position: absolute; top: 2px; right: 18px; width: 18px; height: 15px; background: #d50000; border-radius: 50% 50% 0 0; z-index: 1; box-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+        .wattle { position: absolute; top: 30px; right: 5px; width: 8px; height: 10px; background: #d50000; border-radius: 50%; z-index: 1; }
+
+        .held-hammer { position: absolute; top: -15px; right: -20px; font-size: 35px; display: none; filter: drop-shadow(2px 2px 2px black); transform: rotate(15deg); }
+        .has-hammer .held-hammer { display: block; animation: floatHammer 1s infinite alternate; }
+        @keyframes floatHammer { from { top: -15px; } to { top: -20px; } }
+
+        .attacking .rooster-inner { animation: peckAnim 0.1s ease-in-out; }
+        @keyframes peckAnim { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(15deg) scale(1.2) translateX(10px); } 100% { transform: rotate(0deg) scale(1); } }
+
+        .hp-bar { position: absolute; top: -20px; width: 60px; height: 8px; background: #333; border: 2px solid #000; border-radius: 4px; overflow: hidden; }
+        .hp-fill { height: 100%; background: linear-gradient(90deg, #00ff00, #006400); width: 100%; transition: width 0.2s; }
+        
+        .item-drop { position: absolute; font-size: 32px; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); animation: bounce 1.5s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        .blood-particle { position: absolute; background: #8a0b0b; border-radius: 50%; pointer-events: none; }
+        
+        .nick-display { position: absolute; top: -35px; width: 100%; text-align: center; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px black; color: #fff; }
+
+        #game-over-msg { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 60px; color: gold; text-shadow: 0 0 20px black; font-weight: 900; z-index: 999; text-align: center; }
     </style>
 </head>
 <body>
     <div id="login-screen">
         <h1>UFC GALO 7.2</h1>
-        <input type="text" id="nick" placeholder="Seu apelido">
+        <input type="text" id="nick" maxlength="15" placeholder="Apelido (Max 15)">
         <select id="color">
             <option value="branco">Branco</option>
             <option value="preto">Preto</option>
             <option value="vermelho">Vermelho</option>
         </select>
-        <button onclick="enter()">ENTRAR</button>
+        <button onclick="enter()">ENTRAR NA RINHA</button>
+        <div id="error-box" class="error-msg"></div>
     </div>
 
     <div id="game-container">
-        <div id="leaderboard">TOP 5: <div id="lb-list"></div></div>
+        <div id="game-over-msg"></div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
         const arena = document.getElementById('game-container');
-        let myId = null;
+        const gameOverMsg = document.getElementById('game-over-msg');
+        const errorBox = document.getElementById('error-box');
 
         function enter() {
-            socket.emit('join_game', { name: document.getElementById('nick').value, color: document.getElementById('color').value });
-            document.getElementById('login-screen').style.display = 'none';
+            const name = document.getElementById('nick').value.trim() || "Galo Doido";
+            socket.emit('join_game', { name: name, color: document.getElementById('color').value });
         }
 
         socket.on('login_success', (data) => {
-            myId = data.id;
+            document.getElementById('login-screen').style.display = 'none';
             arena.style.width = data.width + 'px';
             arena.style.height = data.height + 'px';
             startKeys();
+        });
+
+        // Caso a sala esteja cheia
+        socket.on('login_error', (msg) => {
+            errorBox.innerText = msg;
+            errorBox.style.display = 'block';
         });
 
         socket.on('update_state', (players) => {
@@ -74,16 +124,47 @@
                     el = document.createElement('div');
                     el.id = p.id;
                     el.className = `rooster color-${p.color}`;
-                    el.innerHTML = `<div class="hp-bar"><div class="hp-fill"></div></div><div class="rooster-inner"><div class="comb"></div><div class="body"></div><div class="beak"></div><div class="held-hammer">🔨</div></div>`;
+                    el.innerHTML = `
+                        <div class="nick-display">${p.name}</div>
+                        <div class="hp-bar"><div class="hp-fill"></div></div>
+                        <div class="rooster-inner">
+                            <div class="comb"></div>
+                            <div class="body"></div>
+                            <div class="wing"></div>
+                            <div class="wattle"></div>
+                            <div class="beak"></div>
+                            <div class="eye"><div class="pupil"></div></div>
+                            <div class="held-hammer">🔨</div>
+                        </div>`;
                     arena.appendChild(el);
                 }
+                
                 el.style.left = p.x + 'px';
                 el.style.top = p.y + 'px';
-                el.querySelector('.hp-fill').style.width = p.hp + '%';
-                // Vira o galo para o lado certo
+                
+                const hpFill = el.querySelector('.hp-fill');
+                hpFill.style.width = Math.max(0, p.hp) + '%';
+                if(p.hp < 30) hpFill.style.background = "red";
+                else hpFill.style.background = "linear-gradient(90deg, #00ff00, #006400)";
+
                 el.style.transform = `scaleX(${p.direction})`;
+                el.querySelector('.nick-display').style.transform = `scaleX(${p.direction})`;
+
                 p.hasHammer ? el.classList.add('has-hammer') : el.classList.remove('has-hammer');
-                if (p.dead) el.style.opacity = '0.3';
+                
+                if (p.dead) {
+                    el.style.opacity = '0.2';
+                    el.style.filter = 'grayscale(100%)';
+                } else {
+                    el.style.opacity = '1';
+                    el.style.filter = 'none';
+                }
+            });
+
+            const currentIds = Object.keys(players);
+            const domIds = Array.from(document.querySelectorAll('.rooster')).map(e => e.id);
+            domIds.forEach(id => {
+                if(!currentIds.includes(id)) document.getElementById(id).remove();
             });
         });
 
@@ -91,14 +172,21 @@
             const el = document.getElementById(data.id);
             if (el) {
                 el.classList.remove('attacking');
-                void el.offsetWidth;
+                void el.offsetWidth; 
                 el.classList.add('attacking');
             }
         });
 
+        socket.on('blood_effect', (data) => { spawnBlood(data.x, data.y); });
         socket.on('hammer_spawn', (d) => spawnItem(d, '🔨'));
         socket.on('corn_spawn', (d) => spawnItem(d, '🌽'));
         socket.on('item_update', (d) => { if(d.status === 'picked') document.getElementById(d.id)?.remove(); });
+        
+        socket.on('game_over', (data) => {
+            gameOverMsg.innerHTML = `VENCEDOR:<br>${data.winner}<br><small>Reiniciando...</small>`;
+            gameOverMsg.style.display = 'block';
+            setTimeout(() => { gameOverMsg.style.display = 'none'; }, 5000);
+        });
 
         function spawnItem(d, icon) {
             const el = document.createElement('div');
@@ -107,11 +195,40 @@
             arena.appendChild(el);
         }
 
+        function spawnBlood(x, y) {
+            for(let i=0; i<8; i++) {
+                const b = document.createElement('div');
+                b.className = 'blood-particle';
+                const size = Math.random() * 8 + 4;
+                b.style.width = size + 'px';
+                b.style.height = size + 'px';
+                b.style.left = (x + 30) + 'px';
+                b.style.top = (y + 30) + 'px';
+                
+                const angle = Math.random() * 360;
+                const velocity = Math.random() * 50 + 20;
+                
+                arena.appendChild(b);
+
+                let t = 0;
+                const interval = setInterval(() => {
+                    t += 0.1;
+                    const moveX = Math.cos(angle) * velocity * t;
+                    const moveY = Math.sin(angle) * velocity * t + (0.5 * 9.8 * t * t);
+                    b.style.transform = `translate(${moveX}px, ${moveY}px)`;
+                    b.style.opacity = 1 - t/2;
+                    
+                    if(t > 2) { clearInterval(interval); b.remove(); }
+                }, 20);
+            }
+        }
+
         function startKeys() {
             const keys = {};
             window.onkeydown = (e) => keys[e.key.toLowerCase()] = true;
             window.onkeyup = (e) => keys[e.key.toLowerCase()] = false;
             window.onmousedown = () => socket.emit('click_action');
+
             setInterval(() => {
                 if(keys['w']) socket.emit('move', 'w');
                 if(keys['s']) socket.emit('move', 's');
