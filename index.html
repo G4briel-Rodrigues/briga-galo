@@ -55,26 +55,26 @@
         .comb { position: absolute; top: 2px; right: 18px; width: 18px; height: 15px; background: #d50000; border-radius: 50% 50% 0 0; z-index: 1; box-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
         .wattle { position: absolute; top: 30px; right: 5px; width: 8px; height: 10px; background: #d50000; border-radius: 50%; z-index: 1; }
 
-        /* MARTELO CORRIGIDO */
+        /* MARTELO CORRIGIDO E POSICIONADO */
         .held-hammer { 
             position: absolute; 
-            top: -10px; 
-            right: -25px; 
+            top: 20px; /* Mais para baixo, perto da asa */
+            left: -5px; /* Mais para o centro/esquerda */
             font-size: 40px; 
             display: none; 
             filter: drop-shadow(2px 2px 2px black); 
-            /* Espelha horizontalmente e rotaciona para o cabo ficar na mão */
-            transform: scaleX(-1) rotate(-45deg); 
-            transform-origin: bottom left;
+            /* Rotaciona para o cabo ficar na mão e a cabeça para a frente */
+            transform: rotate(-10deg) scaleX(-1); 
+            transform-origin: bottom right; /* Ponto de rotação na base do cabo */
             z-index: 3;
         }
         
         .has-hammer .held-hammer { display: block; animation: floatHammer 0.8s infinite alternate ease-in-out; }
         
-        /* Animação do martelo balançando levemente */
+        /* Animação do martelo balançando levemente na mão */
         @keyframes floatHammer { 
-            from { transform: scaleX(-1) rotate(-45deg); } 
-            to { transform: scaleX(-1) rotate(-35deg); } 
+            from { transform: rotate(-10deg) scaleX(-1); } 
+            to { transform: rotate(-18deg) scaleX(-1); } 
         }
 
         .attacking .rooster-inner { animation: peckAnim 0.1s ease-in-out; }
@@ -260,9 +260,6 @@
                 bubble.className = 'taunt-bubble';
                 bubble.innerText = data.msg;
                 // Corrige orientação do texto caso o galo esteja virado
-                // Como o pai tem scaleX, o filho herda. Precisamos desinverter o texto
-                // Mas a classe CSS já lida com o texto, só precisamos garantir que a div não fique invertida visualmente
-                // A melhor forma é aplicar transform reverso no bubble inline
                 const dir = el.style.transform.includes('-1') ? -1 : 1;
                 bubble.style.transform = `translateX(-50%) scaleX(${dir})`;
                 
