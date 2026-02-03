@@ -55,12 +55,34 @@
         .comb { position: absolute; top: 2px; right: 18px; width: 18px; height: 15px; background: #d50000; border-radius: 50% 50% 0 0; z-index: 1; box-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
         .wattle { position: absolute; top: 30px; right: 5px; width: 8px; height: 10px; background: #d50000; border-radius: 50%; z-index: 1; }
 
-        .held-hammer { position: absolute; top: -15px; right: -20px; font-size: 35px; display: none; filter: drop-shadow(2px 2px 2px black); transform: rotate(15deg); }
-        .has-hammer .held-hammer { display: block; animation: floatHammer 1s infinite alternate; }
-        @keyframes floatHammer { from { top: -15px; } to { top: -20px; } }
+        /* MARTELO CORRIGIDO */
+        .held-hammer { 
+            position: absolute; 
+            top: -10px; 
+            right: -25px; 
+            font-size: 40px; 
+            display: none; 
+            filter: drop-shadow(2px 2px 2px black); 
+            /* Espelha horizontalmente e rotaciona para o cabo ficar na mão */
+            transform: scaleX(-1) rotate(-45deg); 
+            transform-origin: bottom left;
+            z-index: 3;
+        }
+        
+        .has-hammer .held-hammer { display: block; animation: floatHammer 0.8s infinite alternate ease-in-out; }
+        
+        /* Animação do martelo balançando levemente */
+        @keyframes floatHammer { 
+            from { transform: scaleX(-1) rotate(-45deg); } 
+            to { transform: scaleX(-1) rotate(-35deg); } 
+        }
 
         .attacking .rooster-inner { animation: peckAnim 0.1s ease-in-out; }
-        @keyframes peckAnim { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(15deg) scale(1.2) translateX(10px); } 100% { transform: rotate(0deg) scale(1); } }
+        @keyframes peckAnim { 
+            0% { transform: rotate(0deg) scale(1); } 
+            50% { transform: rotate(15deg) scale(1.2) translateX(10px); } 
+            100% { transform: rotate(0deg) scale(1); } 
+        }
 
         .hp-bar { position: absolute; top: -20px; width: 60px; height: 8px; background: #333; border: 2px solid #000; border-radius: 4px; overflow: hidden; }
         .hp-fill { height: 100%; background: linear-gradient(90deg, #00ff00, #006400); width: 100%; transition: width 0.2s; }
@@ -72,7 +94,49 @@
         
         .nick-display { position: absolute; top: -35px; width: 100%; text-align: center; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px black; color: #fff; }
 
+        /* BALÃO DE DESAFORO (Deboche) */
+        .taunt-bubble {
+            position: absolute;
+            top: -70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            color: black;
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            border: 2px solid black;
+            white-space: nowrap;
+            opacity: 0;
+            z-index: 10;
+            pointer-events: none;
+            animation: popTaunt 2.5s forwards;
+        }
+        .taunt-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px 6px 0;
+            border-style: solid;
+            border-color: black transparent transparent transparent;
+        }
+        @keyframes popTaunt {
+            0% { opacity: 0; transform: translateX(-50%) scale(0.5); }
+            10% { opacity: 1; transform: translateX(-50%) scale(1.1); }
+            20% { transform: translateX(-50%) scale(1); }
+            80% { opacity: 1; top: -80px; }
+            100% { opacity: 0; top: -100px; }
+        }
+
         #game-over-msg { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 60px; color: gold; text-shadow: 0 0 20px black; font-weight: 900; z-index: 999; text-align: center; }
+        
+        #cd-display {
+            position: fixed; top: 20px; left: 20px; color: cyan; font-weight: bold; font-size: 18px; 
+            text-shadow: 1px 1px 2px black; display: none;
+        }
     </style>
 </head>
 <body>
@@ -91,6 +155,8 @@
     <div id="game-container">
         <div id="game-over-msg"></div>
     </div>
+    
+    <div id="cd-display">PULO: RECUPERANDO...</div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -98,6 +164,7 @@
         const arena = document.getElementById('game-container');
         const gameOverMsg = document.getElementById('game-over-msg');
         const errorBox = document.getElementById('error-box');
+        const cdDisplay = document.getElementById('cd-display');
 
         function enter() {
             const name = document.getElementById('nick').value.trim() || "Galo Doido";
@@ -111,7 +178,6 @@
             startKeys();
         });
 
-        // Caso a sala esteja cheia
         socket.on('login_error', (msg) => {
             errorBox.innerText = msg;
             errorBox.style.display = 'block';
@@ -139,6 +205,7 @@
                     arena.appendChild(el);
                 }
                 
+                // Suavização do movimento
                 el.style.left = p.x + 'px';
                 el.style.top = p.y + 'px';
                 
@@ -148,7 +215,10 @@
                 else hpFill.style.background = "linear-gradient(90deg, #00ff00, #006400)";
 
                 el.style.transform = `scaleX(${p.direction})`;
-                el.querySelector('.nick-display').style.transform = `scaleX(${p.direction})`;
+                
+                // O texto e barra de vida não devem espelhar com o galo
+                el.querySelector('.nick-display').style.transform = `scaleX(${p.direction})`; 
+                el.querySelector('.hp-bar').style.transform = `scaleX(${p.direction})`;
 
                 p.hasHammer ? el.classList.add('has-hammer') : el.classList.remove('has-hammer');
                 
@@ -161,6 +231,7 @@
                 }
             });
 
+            // Remove quem saiu
             const currentIds = Object.keys(players);
             const domIds = Array.from(document.querySelectorAll('.rooster')).map(e => e.id);
             domIds.forEach(id => {
@@ -175,6 +246,38 @@
                 void el.offsetWidth; 
                 el.classList.add('attacking');
             }
+        });
+
+        // Mostra o desaforo (deboche)
+        socket.on('taunt_display', (data) => {
+            const el = document.getElementById(data.id);
+            if (el) {
+                // Remove balão anterior se existir
+                const old = el.querySelector('.taunt-bubble');
+                if(old) old.remove();
+
+                const bubble = document.createElement('div');
+                bubble.className = 'taunt-bubble';
+                bubble.innerText = data.msg;
+                // Corrige orientação do texto caso o galo esteja virado
+                // Como o pai tem scaleX, o filho herda. Precisamos desinverter o texto
+                // Mas a classe CSS já lida com o texto, só precisamos garantir que a div não fique invertida visualmente
+                // A melhor forma é aplicar transform reverso no bubble inline
+                const dir = el.style.transform.includes('-1') ? -1 : 1;
+                bubble.style.transform = `translateX(-50%) scaleX(${dir})`;
+                
+                el.appendChild(bubble);
+
+                // Auto remove via animação CSS, mas garantimos no JS tbm
+                setTimeout(() => { if(bubble.parentNode) bubble.remove(); }, 3000);
+            }
+        });
+
+        // Feedback visual do cooldown do pulo
+        socket.on('dash_cooldown', (timeRemaining) => {
+            cdDisplay.style.display = 'block';
+            cdDisplay.innerText = `PULO: AGUARDE ${Math.ceil(timeRemaining/1000)}s`;
+            setTimeout(() => { cdDisplay.style.display = 'none'; }, 2000);
         });
 
         socket.on('blood_effect', (data) => { spawnBlood(data.x, data.y); });
@@ -225,7 +328,20 @@
 
         function startKeys() {
             const keys = {};
-            window.onkeydown = (e) => keys[e.key.toLowerCase()] = true;
+            window.onkeydown = (e) => {
+                const k = e.key.toLowerCase();
+                keys[k] = true;
+
+                // Lógica dos Desaforos
+                if (['1','2','3','4','5'].includes(k)) {
+                    socket.emit('taunt', k);
+                }
+                
+                // Lógica do Pulo (Espaço)
+                if (k === ' ') {
+                    socket.emit('dash_action');
+                }
+            };
             window.onkeyup = (e) => keys[e.key.toLowerCase()] = false;
             window.onmousedown = () => socket.emit('click_action');
 
